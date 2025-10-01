@@ -5,3 +5,5 @@ After taking some more classes, I have now upgraded it into a fully interactive 
 The UI is quite intuitive, I believe(?). You can start out by hosting a room, for which you will be provided with a unique room code. You can then have the option of copying the room code, which your friend can then paste by clicking the Join Game button in the Main Menu,
 or copying the link that your friend can just paste in the browser. That's it. Enjoy the game.
 Remember, X always goes first!
+Working link: https://caro-app.onrender.com
+(pasting room link to directly join a room not yet working)
