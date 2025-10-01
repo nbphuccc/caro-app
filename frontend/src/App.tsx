@@ -38,7 +38,7 @@ export default function App() {
   const navigate = useNavigate();
   const pathParts = window.location.pathname.split("/");
   const urlRoomId = pathParts[1] === "room" ? pathParts[2] : null;
-  const isDev = import.meta.env.MODE === "development";
+  //const isDev = import.meta.env.MODE === "development";
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // --- Game state ---
@@ -74,10 +74,13 @@ export default function App() {
   const [opponentStatus, setOpponentStatus] = useState<"connected" | "disconnected" | "left" | null>(null);
   const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
-  const [loadingBackend, setLoadingBackend] = useState(isDev ? true : false);
+  //const [loadingBackend, setLoadingBackend] = useState(isDev ? true : false);
+  const [loadingBackend, setLoadingBackend] = useState(true);
+
 
   // WHEN MAKING NEW STATES, ADD NECESSARY ONES TO THE USEEFFECT THAT RESETS EVERYTHING WHEN A PLAYER DECLINES A NEW MATCH MARKED WITH (**)
 
+  /*
   useEffect(() => {
   if (isDev) {
     // fake 5s backend wakeup
@@ -95,6 +98,20 @@ export default function App() {
     pingBackend();
   }
 }, [isDev]);
+*/
+useEffect(() => {
+  // ping logic
+  const pingBackend = async () => {
+    try {
+      const res = await fetch("/ping");
+      if (res.ok) setLoadingBackend(false);
+    } catch {
+      setTimeout(pingBackend, 2000);
+    }
+  };
+  pingBackend();
+}
+, []);
 
 useEffect(() => {
   if (messagesEndRef.current) {
