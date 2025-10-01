@@ -118,6 +118,10 @@ function resetGame(roomId: string){
   rooms[roomId].winningLine = undefined;
 }
 
+app.get("/ping", (req, res) => {
+  res.send("pong");
+});
+
 io.on("connection", (socket) => {
   const clientId = socket.handshake.query.clientId as string;
   console.log("Connected:", clientId);
@@ -512,8 +516,6 @@ socket.on("kick-player", ({ roomId }: { roomId: string }) => {
     // Broadcast to all clients in the room
     io.in(roomId).emit("chat-message", message);
 });
-
-
 });
 
 const PORT = process.env.PORT || 5000;

@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import { useNavigate } from "react-router-dom";
+//import { useNavigate, Routes, Route } from "react-router-dom";
+
 import { socket } from "./socket"; // shared instance
+//import Home from "./pages/Home";
+//import Room from "./pages/Room";
 
 const BOARD_WIDTH = 18;
 const BOARD_HEIGHT = 25;
@@ -30,11 +34,12 @@ interface MoveMadePayload {
   line?: Point[];
 }
 
-
 export default function App() {
   const navigate = useNavigate();
   const pathParts = window.location.pathname.split("/");
   const urlRoomId = pathParts[1] === "room" ? pathParts[2] : null;
+  const isDev = import.meta.env.MODE === "development";
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // --- Game state ---
   const [board, setBoard] = useState<PlayerRole[][]>(
@@ -69,11 +74,27 @@ export default function App() {
   const [opponentStatus, setOpponentStatus] = useState<"connected" | "disconnected" | "left" | null>(null);
   const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
-
+  const [loadingBackend, setLoadingBackend] = useState(isDev ? true : false);
 
   // WHEN MAKING NEW STATES, ADD NECESSARY ONES TO THE USEEFFECT THAT RESETS EVERYTHING WHEN A PLAYER DECLINES A NEW MATCH MARKED WITH (**)
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+  if (isDev) {
+    // fake 5s backend wakeup
+    setTimeout(() => setLoadingBackend(false), 5000);
+  } else {
+    // real ping logic
+    const pingBackend = async () => {
+      try {
+        const res = await fetch("/ping");
+        if (res.ok) setLoadingBackend(false);
+      } catch {
+        setTimeout(pingBackend, 2000);
+      }
+    };
+    pingBackend();
+  }
+}, [isDev]);
 
 useEffect(() => {
   if (messagesEndRef.current) {
@@ -473,8 +494,6 @@ const isYourTurn =
     ? (playerRole === "X" && turnNumber % 2 === 1) || (playerRole === "O" && turnNumber % 2 === 0)
     : false;
 
-
-
   return (
     <div className="app-container">
       {/* Dashboard */}
@@ -868,6 +887,16 @@ const isYourTurn =
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           />
           <button onClick={sendMessage}>Send</button>
+        </div>
+      </div>
+    )}
+
+    {loadingBackend && (
+      <div className="overlay-backdrop">
+        <div className="overlay-dialog">
+          <h2>Starting server...</h2>
+          <p>This may take a minute...</p>
+          <div className="spinner" />
         </div>
       </div>
     )}
