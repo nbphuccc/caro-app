@@ -3,9 +3,6 @@ import "./App.css";
 import { useNavigate } from "react-router-dom";
 import { socket } from "./socket"; // shared instance
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-
 const BOARD_WIDTH = 18;
 const BOARD_HEIGHT = 25;
 const CELL_SIZE = 30;
@@ -58,7 +55,7 @@ export default function App() {
 
   // --- UI state ---
   const [showMenu, setShowMenu] = useState(true);
-  const [selectedMenu, setSelectedMenu] = useState<"single" | "host" | "join" | null>(null);
+  //const [selectedMenu, setSelectedMenu] = useState<"single" | "host" | "join" | null>(null);
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -140,7 +137,7 @@ useEffect(() => {
       setPlayerRole(res.role);
       setClientId(res.clientId);
       setShowMenu(false);
-      setSelectedMenu("join");
+      //setSelectedMenu("join");
       setRoomFull(true);
       setOpponentStatus("connected");
     });
@@ -270,7 +267,7 @@ useEffect(() => {
     setEndGame(false);
     setWinningLine(null);
     setShowMenu(true);
-    setSelectedMenu(null);
+    //setSelectedMenu(null);
     setUserRoomCode("");
     setNames({});
     setScores({});
@@ -388,7 +385,7 @@ const handleHostGame = () => {
       setPlayerRole(res.role);
       setIsHost(true);
       setShowMenu(false);
-      setSelectedMenu("host");
+      //setSelectedMenu("host");
       navigate(`/room/${res.roomId}`);
     }
   });
@@ -413,7 +410,7 @@ const connectToRoom = () => {
         setClientId(res.clientId);
         setShowNameDialog(!res.nameSet);
         setShowMenu(false);
-        setSelectedMenu("join");
+        //setSelectedMenu("join");
         setJoinGameDialog(false);
         setJoinError(null); // clear previous errors
         setOpponentStatus("connected");
