@@ -40,6 +40,7 @@ export default function App() {
   const urlRoomId = pathParts[1] === "room" ? pathParts[2] : null;
   //const isDev = import.meta.env.MODE === "development";
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   // --- Game state ---
   const [board, setBoard] = useState<PlayerRole[][]>(
@@ -100,18 +101,22 @@ export default function App() {
 }, [isDev]);
 */
 useEffect(() => {
-  // ping logic
   const pingBackend = async () => {
     try {
-      const res = await fetch("/ping");
-      if (res.ok) setLoadingBackend(false);
-    } catch {
-      setTimeout(pingBackend, 2000);
+      const res = await fetch(`${backendUrl}/ping`);
+      if (res.ok) {
+        setLoadingBackend(false);
+        return;
+      }
+    } catch (err) {
+      console.log("Backend not ready, retrying...");
     }
+    setTimeout(pingBackend, 2000);
   };
+
   pingBackend();
-}
-, []);
+}, []);
+
 
 useEffect(() => {
   if (messagesEndRef.current) {
