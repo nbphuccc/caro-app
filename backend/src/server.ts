@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 const server = http.createServer(app);
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5000";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const io = new Server(server, {
   cors: {
@@ -182,6 +182,28 @@ socket.on(
   }
 );
 
+// --- Sync Request ---
+socket.on("sync-request", ({ roomId }: { roomId: string }, ack) => {
+  const room = rooms[roomId];
+  if (!room) {
+    if (ack) ack({ success: false, message: "Room not found" });
+    return;
+  }
+
+  // Send state to all clients in the room
+  io.in(roomId).emit("sync-state", {
+    board: room.board,
+    turnNumber: room.turnNumber,
+    winner: room.winner,
+    line: room.winningLine,
+    names: room.names,
+    scores: room.scores,
+    roleMap: room.roleMap,
+    messages: room.messages,
+  });
+
+  if (ack) ack({ success: true });
+});
 
   // --- Join a room ---
   socket.on("join-room", ({ roomId }: { roomId: string }, ack) => {
