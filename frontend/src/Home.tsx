@@ -15,7 +15,7 @@ export default function Home() {
     const [userRoomCode, setUserRoomCode] = useState("");
     const [joinError, setJoinError] = useState<string | null>(null);
     const [loadingBackend, setLoadingBackend] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    //const [error, setError] = useState<string | null>(null);
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -181,13 +181,6 @@ export default function Home() {
         </div>
       </div>
     )}
-
-    {error && (
-        <div className="error-box">
-          {error}
-          <button onClick={() => (window.location.href = "/")}>Go Back</button>
-        </div>
-      )}
 
     </div>
   );
