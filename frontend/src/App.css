@@ -348,6 +348,24 @@
   box-shadow: var(--shadow-md);
   z-index: 10;
   text-align: center;
+
+  display: flex;              /* make it flex */
+  flex-direction: column;     /* stack vertically */
+  align-items: center;        /* center button under text */
+  gap: 0.75rem;               /* space between text and button */
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column; /* stack vertically */
+  gap: 0.5rem; /* space between text and button */
+  align-items: center;
+}
+
+.error-content p {
+  margin: 0;
+  color: red;
+  font-weight: bold;
 }
 
 .error-box button {

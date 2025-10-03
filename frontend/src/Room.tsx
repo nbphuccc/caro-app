@@ -772,11 +772,14 @@ return (
     )}
 
     {error && (
-        <div className="error-box">
-          {error}
-          <button onClick={() => (window.location.href = "/")}>Go Back</button>
-        </div>
-      )}
+  <div className="error-box">
+    <div className="error-content">
+      <p>{error}</p>
+      <button onClick={() => (window.location.href = "/")}>Go Back</button>
+    </div>
+  </div>
+)}
+
 
     </div>
   );
