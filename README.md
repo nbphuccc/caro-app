@@ -6,4 +6,3 @@ The UI is quite intuitive, I believe(?). You can start out by hosting a room, fo
 or copying the link that your friend can just paste in the browser. That's it. Enjoy the game.
 Remember, X always goes first!
 Working link: https://caro-app.onrender.com
-(pasting room link to directly join a room not yet working)
