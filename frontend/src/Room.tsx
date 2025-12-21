@@ -71,6 +71,7 @@ export default function Room() {
     const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
     const [newMessage, setNewMessage] = useState<string>("");
     //const [loadingBackend, setLoadingBackend] = useState(isDev ? true : false);
+    const [latestMove, setLatestMove] = useState<Point | null>(null);
 
     useEffect(() => {
   const roomIdParam = params.roomId;
@@ -185,6 +186,7 @@ export default function Room() {
       });
   
       setTurnNumber(serverTurn);
+      setLatestMove({ row, col });
   
       if (winner) {
         setEndGame(true);
@@ -710,23 +712,46 @@ return (
         }}
       >
         {board.map((rowArr, i) =>
-          rowArr.map((cell, j) => {
-            const x = j * CELL_SIZE;
-            const y = i * CELL_SIZE;
-            const isWinning = winningLine?.some((p) => p.row === i && p.col === j) ?? false;
-            return (
-              <div
-                key={`${i}-${j}`}
-                className="intersection"
-                style={{ left: x - 11, top: y - 13 }}
-                onClick={() => handleClick(i, j)}
-              >
-                {cell === "X" && <span className={`marker-x ${isWinning ? "winning" : ""}`}>X</span>}
-                {cell === "O" && <span className={`marker-o ${isWinning ? "winning" : ""}`}>O</span>}
-              </div>
-            );
-          })
+  rowArr.map((cell, j) => {
+    const x = j * CELL_SIZE;
+    const y = i * CELL_SIZE;
+
+    const isWinning =
+      winningLine?.some((p) => p.row === i && p.col === j) ?? false;
+
+    const isLatestMove =
+      latestMove?.row === i && latestMove?.col === j;
+
+    return (
+      <div
+        key={`${i}-${j}`}
+        className="intersection"
+        style={{ left: x - 11, top: y - 13 }}
+        onClick={() => handleClick(i, j)}
+      >
+        {cell === "X" && (
+          <span
+            className={`marker-x ${
+              isWinning ? "winning" : ""
+            } ${isLatestMove ? "latest-move" : ""}`}
+          >
+            X
+          </span>
         )}
+
+        {cell === "O" && (
+          <span
+            className={`marker-o ${
+              isWinning ? "winning" : ""
+            } ${isLatestMove ? "latest-move" : ""}`}
+          >
+            O
+          </span>
+        )}
+      </div>
+    );
+  })
+)}
 
         {/* Waiting Overlay */}
         {!roomFull && isHost && !endGame && (
