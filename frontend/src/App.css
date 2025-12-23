@@ -50,8 +50,9 @@
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: hidden;
   color: var(--color-text-light);
 }
@@ -60,7 +61,7 @@
 .board {
   margin-top: 50px;
   background-color: #f9fafb;
-  position: absolute;
+  position: relative;
   display: flex;
   flex-direction: column;
   z-index: 0; /* behind menu */
@@ -74,9 +75,6 @@
   background-size: 30px 30px; /* CELL_SIZE */
   backdrop-filter: blur(4px);
   transition: transform 0.3s ease;
-}
-.board:hover {
-  transform: translateY(-1px);
 }
 
 /* Intersections */
@@ -100,11 +98,15 @@
 
 /* Menu overlay */
 .menu-overlay {
-  position: relative;
-  z-index: 1;
+  position: absolute;          /* ✅ removes from flex flow */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;                 /* above board */
   display: flex;
   flex-direction: column;
   align-items: center;
+  pointer-events: auto;
 }
 
 /* Menu title */
@@ -181,7 +183,7 @@
 
 /* Dashboard bar at top */
 .dashboard {
-  position: absolute;
+  position: relative;
   top: 0;
   left: 0;
   width: 100%;

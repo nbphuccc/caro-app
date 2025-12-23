@@ -31,77 +31,77 @@ const BOARD_HEIGHT = 25;
 const CELL_SIZE = 30;
 
 export default function Room() {
-    const params = useParams<{ roomId: string }>();
-    const location = useLocation();
-    const navigate = useNavigate();
-    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const params = useParams<{ roomId: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
 
-    // --- Game state ---
-    const [board, setBoard] = useState<PlayerRole[][]>(
-      Array.from({ length: BOARD_HEIGHT }, () => Array(BOARD_WIDTH).fill(null))
-    );
-    const [turnNumber, setTurnNumber] = useState<number | null>(null);
-    const [playerRole, setPlayerRole] = useState<"X" | "O" | null>(null);
-    const [roomId, setRoomId] = useState<string | null>(null);
-    const [clientId, setClientId] = useState<string | null>(null);
-    const [isHost, setIsHost] = useState(false);
-    const [roomFull, setRoomFull] = useState(false);
-    const [endGame, setEndGame] = useState(false);
-    const [winningLine, setWinningLine] = useState<Point[] | null>(null);
-    const [localName, setLocalName] = useState("");   // stores what user types
-    const [names, setNames] = useState<Record<string, string>>({});
-    const [scores, setScores] = useState<Record<string,number>>({});
-    const [roleMap, setRoleMap] = useState<Record<PlayerRole, string>>({ X: "", O: "" });
-  
-    // --- UI state ---
-    //const [showMenu, setShowMenu] = useState(true);
-    //const [selectedMenu, setSelectedMenu] = useState<"single" | "host" | "join" | null>(null);
-    const [flashMessage, setFlashMessage] = useState<string | null>(null);
-    const [copied, setCopied] = useState<"code" | "link" | null>(null);
-    const [newGameDialog, setNewGameDialog] = useState<"proposer" | "receiver" | null>(null);
-    //const [joinGameDialog, setJoinGameDialog] = useState(false);
-    //const [userRoomCode, setUserRoomCode] = useState<string>("");
-    //const [joinError, setJoinError] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [switchDialog, setSwitchDialog] = useState<null | "waiting" | "incoming" | "declined" | "accepted">(null);
-    const [showNameDialog, setShowNameDialog] = useState(false); // toggle dialog
-    const [nameError, setNameError] = useState<string | null>(null); // error
-    const [opponentStatus, setOpponentStatus] = useState<"connected" | "disconnected" | "left" | null>(null);
-    const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
-    const [newMessage, setNewMessage] = useState<string>("");
-    //const [loadingBackend, setLoadingBackend] = useState(isDev ? true : false);
-    const [latestMove, setLatestMove] = useState<Point | null>(null);
+  // --- Game state ---
+  const [board, setBoard] = useState<PlayerRole[][]>(
+    Array.from({ length: BOARD_HEIGHT }, () => Array(BOARD_WIDTH).fill(null))
+  );
+  const [turnNumber, setTurnNumber] = useState<number | null>(null);
+  const [playerRole, setPlayerRole] = useState<"X" | "O" | null>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [isHost, setIsHost] = useState(false);
+  const [roomFull, setRoomFull] = useState(false);
+  const [endGame, setEndGame] = useState(false);
+  const [winningLine, setWinningLine] = useState<Point[] | null>(null);
+  const [localName, setLocalName] = useState("");   // stores what user types
+  const [names, setNames] = useState<Record<string, string>>({});
+  const [scores, setScores] = useState<Record<string,number>>({});
+  const [roleMap, setRoleMap] = useState<Record<PlayerRole, string>>({ X: "", O: "" });
 
-    useEffect(() => {
-  const roomIdParam = params.roomId;
-  if (!roomIdParam) return;
+  // --- UI state ---
+  //const [showMenu, setShowMenu] = useState(true);
+  //const [selectedMenu, setSelectedMenu] = useState<"single" | "host" | "join" | null>(null);
+  const [flashMessage, setFlashMessage] = useState<string | null>(null);
+  const [copied, setCopied] = useState<"code" | "link" | null>(null);
+  const [newGameDialog, setNewGameDialog] = useState<"proposer" | "receiver" | null>(null);
+  //const [joinGameDialog, setJoinGameDialog] = useState(false);
+  //const [userRoomCode, setUserRoomCode] = useState<string>("");
+  //const [joinError, setJoinError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [switchDialog, setSwitchDialog] = useState<null | "waiting" | "incoming" | "declined" | "accepted">(null);
+  const [showNameDialog, setShowNameDialog] = useState(false); // toggle dialog
+  const [nameError, setNameError] = useState<string | null>(null); // error
+  const [opponentStatus, setOpponentStatus] = useState<"connected" | "disconnected" | "left" | null>(null);
+  const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
+  const [newMessage, setNewMessage] = useState<string>("");
+  //const [loadingBackend, setLoadingBackend] = useState(isDev ? true : false);
+  const [latestMove, setLatestMove] = useState<Point | null>(null);
 
-  if (location.state && !window.performance?.navigation?.type) {
-    // Navigated from Home via buttons
-    const state = location.state as { isHost: boolean; clientId: string; playerRole: PlayerRole; nameSet?: boolean };
-    setRoomId(roomIdParam);
-    setClientId(state.clientId);
-    setPlayerRole(state.playerRole);
-    setIsHost(state.isHost);
-    setShowNameDialog(!state.nameSet);
-    socket.emit("sync-request", { roomId: roomIdParam }, (res: any) => {
-        if (!res.success) console.error("Sync failed:", res.message);
-    });
-    
-    if (!state.isHost) setOpponentStatus("connected");
-  } else {
-    // Refresh or pasted URL: join via backend
-    socket.emit("join-room", { roomId: roomIdParam }, (ack: any) => {
-      if (!ack.success) return setError(ack.message);
-      setRoomId(ack.roomId);
-      setPlayerRole(ack.role);
-      setClientId(ack.clientId);
-      setShowNameDialog(!ack.nameSet);
-      if (!ack.isHost) setOpponentStatus("connected");
-    });
-  }
-}, [params.roomId, location.state]);
+  useEffect(() => {
+    const roomIdParam = params.roomId;
+    if (!roomIdParam) return;
+
+    if (location.state && !window.performance?.navigation?.type) {
+      // Navigated from Home via buttons
+      const state = location.state as { isHost: boolean; clientId: string; playerRole: PlayerRole; nameSet?: boolean };
+      setRoomId(roomIdParam);
+      setClientId(state.clientId);
+      setPlayerRole(state.playerRole);
+      setIsHost(state.isHost);
+      setShowNameDialog(!state.nameSet);
+      socket.emit("sync-request", { roomId: roomIdParam }, (res: any) => {
+          if (!res.success) console.error("Sync failed:", res.message);
+      });
+      
+      if (!state.isHost) setOpponentStatus("connected");
+    } else {
+      // Refresh or pasted URL: join via backend
+      socket.emit("join-room", { roomId: roomIdParam }, (ack: any) => {
+        if (!ack.success) return setError(ack.message);
+        setRoomId(ack.roomId);
+        setPlayerRole(ack.role);
+        setClientId(ack.clientId);
+        setShowNameDialog(!ack.nameSet);
+        if (!ack.isHost) setOpponentStatus("connected");
+      });
+    }
+  }, [params.roomId, location.state]);
 
 
 /*
@@ -116,7 +116,7 @@ export default function Room() {
     */
   
     // --- Receive sync state ---
-    useEffect(() => {
+  useEffect(() => {
     const handleSyncState = (state: SyncState) => {
       setBoard(state.board);
       setTurnNumber(state.turnNumber);
@@ -137,19 +137,19 @@ export default function Room() {
 
   // --- Host listens for opponent ---
   useEffect(() => {
-  if (!isHost) return;
+    if (!isHost) return;
 
-  const handleOpponentJoin = () => {
-    setRoomFull(true);
-    setOpponentStatus("connected");
-  };
+    const handleOpponentJoin = () => {
+      setRoomFull(true);
+      setOpponentStatus("connected");
+    };
 
-  socket.on("player-joined", handleOpponentJoin);
+    socket.on("player-joined", handleOpponentJoin);
 
-  return () => {
-    socket.off("player-joined", handleOpponentJoin);
-  };
-}, [isHost]);
+    return () => {
+      socket.off("player-joined", handleOpponentJoin);
+    };
+  }, [isHost]);
 
 // --- Opponent disconnect / host change ---
   useEffect(() => {
@@ -209,125 +209,124 @@ export default function Room() {
   }, []);
   
   // Handle new game proposals
-useEffect(() => {
-  const handleNewGameRequest = () => {
-    setNewGameDialog("receiver");
-  };
+  useEffect(() => {
+    const handleNewGameRequest = () => {
+      setNewGameDialog("receiver");
+    };
 
-  socket.on("new-game-request", handleNewGameRequest);
-  return () => {
-    socket.off("new-game-request", handleNewGameRequest);
-  };
-}, []);
+    socket.on("new-game-request", handleNewGameRequest);
+    return () => {
+      socket.off("new-game-request", handleNewGameRequest);
+    };
+  }, []);
 
-// Hanldle rejecting, accepting new game
-useEffect(() => {
-  const handleNewGameStarted = () => {
-    setBoard(Array.from({ length: BOARD_HEIGHT }, () => Array(BOARD_WIDTH).fill(null)));
-    setTurnNumber(1);
-    setEndGame(false);
-    setWinningLine(null);
-    setNewGameDialog(null);
-  };
+  // Hanldle rejecting, accepting new game
+  useEffect(() => {
+    const handleNewGameStarted = () => {
+      setBoard(Array.from({ length: BOARD_HEIGHT }, () => Array(BOARD_WIDTH).fill(null)));
+      setTurnNumber(1);
+      setEndGame(false);
+      setWinningLine(null);
+      setNewGameDialog(null);
+    };
 
-  const handleNewGameDeclined = () => {
-    setFlashMessage(`${names[roleMap[playerRole === "X" ? "O" : "X"]] ?? "Your opponent"} declined the new game.`);
+    const handleNewGameDeclined = () => {
+      setFlashMessage(`${names[roleMap[playerRole === "X" ? "O" : "X"]] ?? "Your opponent"} declined the new game.`);
 
-    setTimeout(() => setFlashMessage(null), 3000);
-    setNewGameDialog(null);
-  };
+      setTimeout(() => setFlashMessage(null), 3000);
+      setNewGameDialog(null);
+    };
 
-  socket.on("new-game-started", handleNewGameStarted);
-  socket.on("new-game-declined", handleNewGameDeclined);
+    socket.on("new-game-started", handleNewGameStarted);
+    socket.on("new-game-declined", handleNewGameDeclined);
 
-  return () => {
-    socket.off("new-game-started", handleNewGameStarted);
-    socket.off("new-game-declined", handleNewGameDeclined);
-  };
-}, []);
+    return () => {
+      socket.off("new-game-started", handleNewGameStarted);
+      socket.off("new-game-declined", handleNewGameDeclined);
+    };
+  }, []);
 
-// (**) When intentionally leave room, go back to default state. (**)
-useEffect(() => {
-  const handleLeave = () => {
-    // --- Reset all game and UI state ---
-    setBoard(Array.from({ length: BOARD_HEIGHT }, () => Array(BOARD_WIDTH).fill(null)));
-    setTurnNumber(null);
-    setPlayerRole(null);
-    setRoomId(null);
-    setIsHost(false);
-    setRoomFull(false);
-    setEndGame(false);
-    setWinningLine(null);
-    //setShowMenu(true);
-    //setSelectedMenu(null);
-    //setUserRoomCode("");
-    setNames({});
-    setScores({});
-    setLocalName("");
-    setRoleMap({ X: "", O: "" });
-    setOpponentStatus(null);
-    setMessages([]);
-    setNewMessage("");
-    // --- Navigate back to default route ---
-    navigate("/", { replace: true });
-  };
+  // (**) When intentionally leave room, go back to default state. (**)
+  useEffect(() => {
+    const handleLeave = () => {
+      // --- Reset all game and UI state ---
+      setBoard(Array.from({ length: BOARD_HEIGHT }, () => Array(BOARD_WIDTH).fill(null)));
+      setTurnNumber(null);
+      setPlayerRole(null);
+      setRoomId(null);
+      setIsHost(false);
+      setRoomFull(false);
+      setEndGame(false);
+      setWinningLine(null);
+      //setShowMenu(true);
+      //setSelectedMenu(null);
+      //setUserRoomCode("");
+      setNames({});
+      setScores({});
+      setLocalName("");
+      setRoleMap({ X: "", O: "" });
+      setOpponentStatus(null);
+      setMessages([]);
+      setNewMessage("");
+      // --- Navigate back to default route ---
+      navigate("/", { replace: true });
+    };
 
-  socket.on("room-left-intentional", handleLeave);
+    socket.on("room-left-intentional", handleLeave);
 
-  return () => {
-    socket.off("room-left-intentional", handleLeave);
-  };
-}, []);
+    return () => {
+      socket.off("room-left-intentional", handleLeave);
+    };
+  }, []);
 
-// New game when the other player leave the game
-useEffect(() => {
-  const handleOpponentLeft = () => {
-    // Clear board but keep yourself in the room
-    setBoard(Array.from({ length: BOARD_HEIGHT }, () =>
-      Array(BOARD_WIDTH).fill(null)
-    ));
-    setTurnNumber(1);
-    setWinningLine(null);
-    setEndGame(false)
-    // Mark that you’re now waiting for a new opponent
-    setRoomFull(false);
-    setOpponentStatus("left");
-  };
+  // New game when the other player leave the game
+  useEffect(() => {
+    const handleOpponentLeft = () => {
+      // Clear board but keep yourself in the room
+      setBoard(Array.from({ length: BOARD_HEIGHT }, () =>
+        Array(BOARD_WIDTH).fill(null)
+      ));
+      setTurnNumber(1);
+      setWinningLine(null);
+      setEndGame(false)
+      // Mark that you’re now waiting for a new opponent
+      setRoomFull(false);
+      setOpponentStatus("left");
+    };
 
-  socket.on("opponent-intentionally-left", handleOpponentLeft);
-  return () => {
-    socket.off("opponent-intentionally-left", handleOpponentLeft);
-  };
-}, []);
+    socket.on("opponent-intentionally-left", handleOpponentLeft);
+    return () => {
+      socket.off("opponent-intentionally-left", handleOpponentLeft);
+    };
+  }, []);
 
-// Role Switch 
-useEffect(() => {
-  // Opponent asks to switch
-  socket.on("switch-roles-request", () => {
-    setSwitchDialog("incoming"); // show Accept/Decline dialog
-  });
+  // Role Switch 
+  useEffect(() => {
+    // Opponent asks to switch
+    socket.on("switch-roles-request", () => {
+      setSwitchDialog("incoming"); // show Accept/Decline dialog
+    });
 
-  // Opponent declined
-  socket.on("switch-roles-declined", () => {
-    setSwitchDialog("declined"); // show "Opponent declined"
-  });
+    // Opponent declined
+    socket.on("switch-roles-declined", () => {
+      setSwitchDialog("declined"); // show "Opponent declined"
+    });
 
-  // Switch accepted
-  socket.on(
-  "switch-roles-accepted",
-  ({ newRole, roleMap }: { newRole: PlayerRole; roleMap: Record<PlayerRole, string> }) => {
-    setPlayerRole(newRole);
-    setRoleMap(roleMap);
-    setSwitchDialog("accepted");
-  }
-);
-
-  return () => {
-    socket.off("switch-roles-request");
-    socket.off("switch-roles-declined");
-    socket.off("switch-roles-accepted");
-  };
-}, []);
+    // Switch accepted
+    socket.on(
+    "switch-roles-accepted",
+    ({ newRole, roleMap }: { newRole: PlayerRole; roleMap: Record<PlayerRole, string> }) => {
+      setPlayerRole(newRole);
+      setRoleMap(roleMap);
+      setSwitchDialog("accepted");
+    }
+  );
+    return () => {
+      socket.off("switch-roles-request");
+      socket.off("switch-roles-declined");
+      socket.off("switch-roles-accepted");
+    };
+  }, []);
 
 // --- Socket Listener ---
   useEffect(() => {
@@ -341,10 +340,10 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
-  if (messagesEndRef.current) {
-    messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-  }
-}, [messages]);
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
 // --- Make move ---
   const handleClick = (row: number, col: number) => {
@@ -376,151 +375,151 @@ useEffect(() => {
   };
 
   //Responds to new game offer
-const respondNewGame = (accept: boolean) => {
-  if (!roomId) return;
+  const respondNewGame = (accept: boolean) => {
+    if (!roomId) return;
 
-  socket.emit("respond-new-game", { roomId, accept });
-  setNewGameDialog(null);
-};
+    socket.emit("respond-new-game", { roomId, accept });
+    setNewGameDialog(null);
+  };
 
-// --- Switch Sides ---
-const handleSwitchSides = () => {
-  if (!roomId || !playerRole) return;
+  // --- Switch Sides ---
+  const handleSwitchSides = () => {
+    if (!roomId || !playerRole) return;
 
-  // Emit a request to switch roles
-  socket.emit("propose-switch-roles", { roomId }, (res: { success: boolean; message?: string }) => {
-    if (!res.success) {
-      setFlashMessage(res.message || "Failed to propose switch.");
+    // Emit a request to switch roles
+    socket.emit("propose-switch-roles", { roomId }, (res: { success: boolean; message?: string }) => {
+      if (!res.success) {
+        setFlashMessage(res.message || "Failed to propose switch.");
+        return;
+      }
+
+      // Show "waiting" dialog for proposer
+      setSwitchDialog("waiting");
+    });
+  };
+
+  // --- Handler for submitting name ---
+  const handleGetName = () => {
+    const newName = localName.trim();
+    if (!newName) {
+      setNameError("Name cannot be empty");
       return;
     }
+    setNameError(null);
 
-    // Show "waiting" dialog for proposer
-    setSwitchDialog("waiting");
-  });
-};
-
-// --- Handler for submitting name ---
-const handleGetName = () => {
-  const newName = localName.trim();
-  if (!newName) {
-    setNameError("Name cannot be empty");
-    return;
-  }
-  setNameError(null);
-
-  socket.emit("get-name", { roomId, name: newName }, (ack: { success: boolean }) => {
-      if (ack.success) {
-        setShowNameDialog(false);
-      } else {
-        setNameError("Failed to set name");
+    socket.emit("get-name", { roomId, name: newName }, (ack: { success: boolean }) => {
+        if (ack.success) {
+          setShowNameDialog(false);
+        } else {
+          setNameError("Failed to set name");
+        }
       }
-    }
-  );
-};
+    );
+  };
 
-// --- Send Message ---
-const sendMessage = () => {
-  const trimmed = newMessage.trim();
-  if (!trimmed || !clientId) return;
+  // --- Send Message ---
+  const sendMessage = () => {
+    const trimmed = newMessage.trim();
+    if (!trimmed || !clientId) return;
 
-  socket.emit("chat-message", { roomId, text: trimmed });
-  setNewMessage("");
-};
+    socket.emit("chat-message", { roomId, text: trimmed });
+    setNewMessage("");
+  };
 
 
-const isYourTurn = 
-  playerRole && turnNumber
-    ? (playerRole === "X" && turnNumber % 2 === 1) || (playerRole === "O" && turnNumber % 2 === 0)
-    : false;
+  const isYourTurn = 
+    playerRole && turnNumber
+      ? (playerRole === "X" && turnNumber % 2 === 1) || (playerRole === "O" && turnNumber % 2 === 0)
+      : false;
 
-return (
+  return (
     <div className="app-container">
       {/* Dashboard */}
       <div className="dashboard">
         {roomId && (
-        <>
-          <button
-            className={`dashboard-button new-game ${endGame ? "" : "disabled"}`}
-            onClick={handleNewGameClick}
-          >
-            New Game
-          </button>
-
-          <button
-            className="dashboard-button switch-sides"
-            onClick={handleSwitchSides}
-            disabled={turnNumber !== 1 && !endGame} // locked unless game not started or game ended
-          >
-            Switch Sides
-          </button>
-
-          <button 
-            className="dashboard-button change-name"
-            onClick={() => setShowNameDialog(true)}
-          >
-            Change Name
-          </button>
-
-          {/* Kick Button */}
-          {isHost && (
+          <>
             <button
-              className="dashboard-button kick"
-              onClick={() => {
-                socket.emit("kick-player", { roomId });
-                setOpponentStatus("left");
-              }}
-              disabled={opponentStatus !== "disconnected"} // disable unless opponent disconnected
+              className={`dashboard-button new-game ${endGame ? "" : "disabled"}`}
+              onClick={handleNewGameClick}
             >
-              Kick
+              New Game
             </button>
-          )}
-        </>
-      )}
+
+            <button
+              className="dashboard-button switch-sides"
+              onClick={handleSwitchSides}
+              disabled={turnNumber !== 1 && !endGame} // locked unless game not started or game ended
+            >
+              Switch Sides
+            </button>
+
+            <button 
+              className="dashboard-button change-name"
+              onClick={() => setShowNameDialog(true)}
+            >
+              Change Name
+            </button>
+
+            {/* Kick Button */}
+            {isHost && (
+              <button
+                className="dashboard-button kick"
+                onClick={() => {
+                  socket.emit("kick-player", { roomId });
+                  setOpponentStatus("left");
+                }}
+                disabled={opponentStatus !== "disconnected"} // disable unless opponent disconnected
+              >
+                Kick
+              </button>
+            )}
+          </>
+        )}
 
 
         {flashMessage && <div className="flash-message">{flashMessage}</div>}
 
         {roomId && (
-        <div className="room-box">
-          {/* Top row: label + ID */}
-          <div className="room-info">
-            <span className="room-label">{isHost ? "Hosting Room:" : "Joining Room:"}</span>
-            <span className="room-id">{roomId}</span>
-          </div>
-
-          {/* Second row: copy buttons */}
-          <div className="copy-buttons">
-            <div>
-              <button
-                className="copy-button"
-                onClick={() => {
-                  navigator.clipboard.writeText(roomId);
-                  setCopied("code");
-                  setTimeout(() => setCopied(null), 1500);
-                }}
-              >
-                Copy Code
-              </button>
-              {copied === "code" && <span className="copied-text">Copied!</span>}
+          <div className="room-box">
+            {/* Top row: label + ID */}
+            <div className="room-info">
+              <span className="room-label">{isHost ? "Hosting Room:" : "Joining Room:"}</span>
+              <span className="room-id">{roomId}</span>
             </div>
 
-            <div>
-              <button
-                className="copy-button"
-                onClick={() => {
-                  const link = `${window.location.origin}/room/${roomId}`;
-                  navigator.clipboard.writeText(link);
-                  setCopied("link");
-                  setTimeout(() => setCopied(null), 1500);
-                }}
-              >
-                Copy Link
-              </button>
-              {copied === "link" && <span className="copied-text">Copied!</span>}
+            {/* Second row: copy buttons */}
+            <div className="copy-buttons">
+              <div>
+                <button
+                  className="copy-button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(roomId);
+                    setCopied("code");
+                    setTimeout(() => setCopied(null), 1500);
+                  }}
+                >
+                  Copy Code
+                </button>
+                {copied === "code" && <span className="copied-text">Copied!</span>}
+              </div>
+
+              <div>
+                <button
+                  className="copy-button"
+                  onClick={() => {
+                    const link = `${window.location.origin}/room/${roomId}`;
+                    navigator.clipboard.writeText(link);
+                    setCopied("link");
+                    setTimeout(() => setCopied(null), 1500);
+                  }}
+                >
+                  Copy Link
+                </button>
+                {copied === "link" && <span className="copied-text">Copied!</span>}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
 
         {/* Turn Indicator Box */}
@@ -712,46 +711,46 @@ return (
         }}
       >
         {board.map((rowArr, i) =>
-  rowArr.map((cell, j) => {
-    const x = j * CELL_SIZE;
-    const y = i * CELL_SIZE;
+          rowArr.map((cell, j) => {
+            const x = j * CELL_SIZE;
+            const y = i * CELL_SIZE;
 
-    const isWinning =
-      winningLine?.some((p) => p.row === i && p.col === j) ?? false;
+            const isWinning =
+              winningLine?.some((p) => p.row === i && p.col === j) ?? false;
 
-    const isLatestMove =
-      latestMove?.row === i && latestMove?.col === j;
+            const isLatestMove =
+              latestMove?.row === i && latestMove?.col === j;
 
-    return (
-      <div
-        key={`${i}-${j}`}
-        className="intersection"
-        style={{ left: x - 11, top: y - 13 }}
-        onClick={() => handleClick(i, j)}
-      >
-        {cell === "X" && (
-          <span
-            className={`marker-x ${
-              isWinning ? "winning" : ""
-            } ${isLatestMove ? "latest-move" : ""}`}
-          >
-            X
-          </span>
+            return (
+              <div
+                key={`${i}-${j}`}
+                className="intersection"
+                style={{ left: x - 11, top: y - 13 }}
+                onClick={() => handleClick(i, j)}
+              >
+                {cell === "X" && (
+                  <span
+                    className={`marker-x ${
+                      isWinning ? "winning" : ""
+                    } ${isLatestMove ? "latest-move" : ""}`}
+                  >
+                    X
+                  </span>
+                )}
+
+                {cell === "O" && (
+                  <span
+                    className={`marker-o ${
+                      isWinning ? "winning" : ""
+                    } ${isLatestMove ? "latest-move" : ""}`}
+                  >
+                    O
+                  </span>
+                )}
+              </div>
+            );
+          })
         )}
-
-        {cell === "O" && (
-          <span
-            className={`marker-o ${
-              isWinning ? "winning" : ""
-            } ${isLatestMove ? "latest-move" : ""}`}
-          >
-            O
-          </span>
-        )}
-      </div>
-    );
-  })
-)}
 
         {/* Waiting Overlay */}
         {!roomFull && isHost && !endGame && (
@@ -769,44 +768,41 @@ return (
       </div>
 
       {roomId && (
-      <div className="chat-window">
-        <div className="chat-messages">
-          {messages.map((msg, idx) => {
-            const senderName = names[msg.sender] ?? "Unknown";
-            return (
-              <div key={idx} className="chat-message">
-                <span className="chat-sender">{senderName}:</span>
-                <span className="chat-text">{msg.text}</span>
-              </div>
-            );
-          })}
-            <div ref={messagesEndRef} />  {/* anchor */}
+        <div className="chat-window">
+          <div className="chat-messages">
+            {messages.map((msg, idx) => {
+              const senderName = names[msg.sender] ?? "Unknown";
+              return (
+                <div key={idx} className="chat-message">
+                  <span className="chat-sender">{senderName}:</span>
+                  <span className="chat-text">{msg.text}</span>
+                </div>
+              );
+            })}
+              <div ref={messagesEndRef} />  {/* anchor */}
 
+          </div>
+          <div className="chat-input">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            />
+            <button onClick={sendMessage}>Send</button>
+          </div>
         </div>
-        <div className="chat-input">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          />
-          <button onClick={sendMessage}>Send</button>
+      )}
+
+      {error && (
+        <div className="error-box">
+          <div className="error-content">
+            <p>{error}</p>
+            <button onClick={() => (window.location.href = "/")}>Go Back</button>
+          </div>
         </div>
-      </div>
-    )}
-
-    {error && (
-  <div className="error-box">
-    <div className="error-content">
-      <p>{error}</p>
-      <button onClick={() => (window.location.href = "/")}>Go Back</button>
-    </div>
-  </div>
-)}
-
-
+      )}
     </div>
   );
-
 }
