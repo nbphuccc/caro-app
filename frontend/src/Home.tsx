@@ -101,26 +101,47 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Menu overlay */}
-      {showMenu && (
-        <div className="menu-overlay">
-          <h1 className="menu-title">Caro</h1>
-          <div className="menu-buttons">
-            <button className="menu-button host-game" onClick={handleHostGame}>
-              Host Game
-            </button>
-            <button className="menu-button join-game" onClick={handleJoinGame}>
-              Join Game
-            </button>
-            <button
-              className="menu-button exit"
-              onClick={() => setShowMenu(false)}
-            >
-              Close Menu
-            </button>
+      <div
+        className="board"
+        style={{
+          width: (BOARD_WIDTH - 1) * CELL_SIZE,
+          height: (BOARD_HEIGHT - 1) * CELL_SIZE,
+        }}
+      >
+        {showMenu && (
+          <div className="menu-overlay">
+            <h1 className="menu-title">Caro</h1>
+            <div className="menu-buttons">
+              <button className="menu-button host-game" onClick={handleHostGame}>
+                Host Game
+              </button>
+              <button className="menu-button join-game" onClick={handleJoinGame}>
+                Join Game
+              </button>
+              <button
+                className="menu-button exit"
+                onClick={() => setShowMenu(false)}
+              >
+                Close Menu
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {Array.from({ length: BOARD_HEIGHT }).map((_, i) =>
+          Array.from({ length: BOARD_WIDTH }).map((_, j) => {
+            const x = j * CELL_SIZE;
+            const y = i * CELL_SIZE;
+            return (
+              <div
+                key={`${i}-${j}`}
+                className="intersection"
+                style={{ left: x - 11, top: y - 13 }}
+              />
+            );
+          })
+        )}
+      </div>
 
       {/* Join-room dialog */}
       {joinGameDialog && (
@@ -148,29 +169,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* Empty visual board */}
-      <div
-        className="board"
-        style={{
-          width: (BOARD_WIDTH - 1) * CELL_SIZE,
-          height: (BOARD_HEIGHT - 1) * CELL_SIZE,
-        }}
-      >
-        {Array.from({ length: BOARD_HEIGHT }).map((_, i) =>
-          Array.from({ length: BOARD_WIDTH }).map((_, j) => {
-            const x = j * CELL_SIZE;
-            const y = i * CELL_SIZE;
-            return (
-              <div
-                key={`${i}-${j}`}
-                className="intersection"
-                style={{ left: x - 11, top: y - 13 }}
-              />
-            );
-          })
-        )}
-      </div>
 
       {loadingBackend && (
       <div className="overlay-backdrop">
