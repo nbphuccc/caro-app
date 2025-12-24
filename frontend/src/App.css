@@ -55,6 +55,9 @@
   justify-content: flex-start;
   overflow-x: auto;         /* ✅ prevent sideways scroll */
   overflow-y: auto;           /* ✅ allow vertical scroll */
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
   color: var(--color-text-light);
 }
 
