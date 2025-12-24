@@ -77,46 +77,49 @@ export default function Room() {
     const roomIdParam = params.roomId;
     if (!roomIdParam) return;
 
-    if (location.state && !window.performance?.navigation?.type) {
-      // Navigated from Home via buttons
-      const state = location.state as { isHost: boolean; clientId: string; playerRole: PlayerRole; nameSet?: boolean };
+    //const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    //const isReload = navEntry?.type === "reload";
+
+    //console.log("RELOAD:", isReload);
+
+    console.log("Location state:", location.state);
+    if (location.state) {
+      // In-app button navigation
+      const state = location.state as {
+        isHost: boolean;
+        clientId: string;
+        playerRole: PlayerRole;
+        nameSet?: boolean;
+      };
+
       setRoomId(roomIdParam);
       setClientId(state.clientId);
       setPlayerRole(state.playerRole);
       setIsHost(state.isHost);
       setShowNameDialog(!state.nameSet);
-      console.log("Navigated with state:", state);
+
       socket.emit("sync-request", { roomId: roomIdParam }, (res: any) => {
-          if (!res.success) console.error("Sync failed:", res.message);
+        if (!res.success) setError(res.message);
       });
-      
+
       if (!state.isHost) setOpponentStatus("connected");
+      window.history.replaceState(null, document.title, window.location.href);
     } else {
-      // Refresh or pasted URL: join via backend
+      // Refresh or direct URL paste
       socket.emit("join-room", { roomId: roomIdParam }, (ack: any) => {
         if (!ack.success) return setError(ack.message);
+
         setRoomId(ack.roomId);
         setPlayerRole(ack.role);
         setClientId(ack.clientId);
         setShowNameDialog(!ack.nameSet);
+
         if (!ack.isHost) setOpponentStatus("connected");
       });
     }
   }, [params.roomId, location.state]);
-
-
-/*
-  // --- Sync request on load / reconnect ---
-    useEffect(() => {
-      if (!roomId) return;
   
-      socket.emit("sync-request", { roomId }, (res: any) => {
-        if (!res.success) console.error("Sync failed:", res.message);
-      });
-    }, []);
-    */
-  
-    // --- Receive sync state ---
+  // --- Receive sync state ---
   useEffect(() => {
     const handleSyncState = (state: SyncState) => {
       setBoard(state.board);
@@ -152,7 +155,7 @@ export default function Room() {
     };
   }, [isHost]);
 
-// --- Opponent disconnect / host change ---
+  // --- Opponent disconnect / host change ---
   useEffect(() => {
     socket.on("opponent-left", () => {
       setRoomFull(false);
@@ -329,7 +332,7 @@ export default function Room() {
     };
   }, []);
 
-// --- Socket Listener ---
+  // --- Socket Listener ---
   useEffect(() => {
     socket.on("chat-message", ({ sender, text }: { sender: string; text: string }) => {
     setMessages((prev) => [...prev, { sender, text }]);
@@ -346,7 +349,7 @@ export default function Room() {
     }
   }, [messages]);
 
-// --- Make move ---
+  // --- Make move ---
   const handleClick = (row: number, col: number) => {
     console.log("Name:", name, "Turn:", turnNumber, "Role:", playerRole, "EndGame:", endGame);
     if (!roomId || endGame) return;
