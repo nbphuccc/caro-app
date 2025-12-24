@@ -173,7 +173,7 @@ export default function Room() {
       socket.off("opponent-left");
       socket.off("host-changed");
     };
-  }, []);
+  }, [names, playerRole, roleMap]);
 
   // --- Moves from server ---
   useEffect(() => {
@@ -245,7 +245,7 @@ export default function Room() {
       socket.off("new-game-started", handleNewGameStarted);
       socket.off("new-game-declined", handleNewGameDeclined);
     };
-  }, []);
+  }, [names, playerRole, roleMap]);
 
   // (**) When intentionally leave room, go back to default state. (**)
   useEffect(() => {
@@ -278,7 +278,7 @@ export default function Room() {
     return () => {
       socket.off("room-left-intentional", handleLeave);
     };
-  }, []);
+  }, [navigate]);
 
   // New game when the other player leave the game
   useEffect(() => {

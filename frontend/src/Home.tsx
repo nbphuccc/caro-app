@@ -35,7 +35,7 @@ export default function Home() {
       };
     
       pingBackend();
-    }, []);
+    }, [backendUrl]);
 
 
   // --- Host game ---
