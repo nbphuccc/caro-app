@@ -85,6 +85,7 @@ export default function Room() {
       setPlayerRole(state.playerRole);
       setIsHost(state.isHost);
       setShowNameDialog(!state.nameSet);
+      console.log("Navigated with state:", state);
       socket.emit("sync-request", { roomId: roomIdParam }, (res: any) => {
           if (!res.success) console.error("Sync failed:", res.message);
       });
